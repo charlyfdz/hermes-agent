@@ -1546,12 +1546,17 @@ class TestBuildSafeEnv:
         with patch.dict("os.environ", fake_env, clear=True):
             result = _build_safe_env(None)
 
-        assert result["ProgramFiles"] == r"C:\Program Files"
-        assert result["ProgramData"] == r"C:\ProgramData"
-        assert result["ProgramW6432"] == r"C:\Program Files"
-        assert result["LOCALAPPDATA"].endswith("Local")
-        assert result["APPDATA"].endswith("Roaming")
-        assert result["USERPROFILE"] == r"C:\Users\alice"
+        # Windows environment mappings are case-insensitive and may canonicalize
+        # key spelling (for example ``ProgramFiles`` -> ``PROGRAMFILES``).
+        def env_value(name):
+            return next(value for key, value in result.items() if key.upper() == name.upper())
+
+        assert env_value("ProgramFiles") == r"C:\Program Files"
+        assert env_value("ProgramData") == r"C:\ProgramData"
+        assert env_value("ProgramW6432") == r"C:\Program Files"
+        assert env_value("LOCALAPPDATA").endswith("Local")
+        assert env_value("APPDATA").endswith("Roaming")
+        assert env_value("USERPROFILE") == r"C:\Users\alice"
         assert "GITHUB_TOKEN" not in result
         assert "OPENAI_API_KEY" not in result
 

@@ -252,6 +252,8 @@ def test_config_enabled_hard_stop_concurrent_path_does_not_submit_blocked_calls_
 
 
 def test_relay_rewrite_precedes_sequential_policy_approval_checkpoint_and_dispatch():
+    from tools.file_tools_paths import _resolve_path_for_task
+
     agent = _make_agent("write_file")
     original_args = {"path": "/original/path", "content": "old"}
     final_args = {"path": "/approved/path", "content": "new"}
@@ -323,8 +325,9 @@ def test_relay_rewrite_precedes_sequential_policy_approval_checkpoint_and_dispat
     assert observed["approval"] == expected
     assert observed["start"] == expected
     assert observed["dispatch"] == expected
+    expected_checkpoint_path = str(_resolve_path_for_task("/approved/path", "task-1"))
     assert observed["checkpoint"] == [
-        ("/approved/path", "before write_file")
+        (expected_checkpoint_path, "before write_file")
     ]
 
 
